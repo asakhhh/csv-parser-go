@@ -40,11 +40,11 @@ func Join(s []string, sep string) string {
 func (pr *Parser) ReadLine(r io.Reader) (*string, error) {
 	*pr.line = ""
 	*pr.fields = (*pr.fields)[:0]
-	var curField []string
-	field := ""
+	curField := []string{""}
 	b := make([]byte, 1)
 	inQuo := false
 	quoField := false
+	started := false
 
 	for {
 		_, err := r.Read(b)
@@ -52,10 +52,20 @@ func (pr *Parser) ReadLine(r io.Reader) (*string, error) {
 			if inQuo {
 				return nil, ErrQuote
 			}
-			if quoField && (*pr.line)[len(*pr.line)-1] != '"' {
-			}
+			// todo
 		} else if err != nil {
 			return nil, err
+		}
+
+		if b[0] == '"' {
+			if !started {
+				quoField = true
+				started = true
+			} else if !quoField {
+				return nil, ErrQuote
+			}
+			inQuo = !inQuo
+			curField[len(curField)-1] += string(b)
 		}
 	}
 }

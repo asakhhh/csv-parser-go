@@ -1,12 +1,11 @@
 package main
 
 import (
+	"a-library-for-others/csvparser"
 	"fmt"
 	"io"
 	"os"
 	"strings"
-
-	"a-library-for-others/csvparser"
 )
 
 func main() {
@@ -33,7 +32,7 @@ func main() {
 			if err != nil {
 				fmt.Println("Error: ", err)
 			}
-			fields = append(fields, fmt.Sprintf("%r", field))
+			fields = append(fields, fmt.Sprintf("\"%s\"", field))
 		}
 		fmt.Println(strings.Join(fields, "|"))
 	}
