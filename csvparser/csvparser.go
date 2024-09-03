@@ -20,10 +20,11 @@ type Parser struct {
 	line        *string
 	fields      *[]string
 	numOfFields int
+	endedOnCR   bool
 }
 
 func NewParser() *Parser {
-	return &Parser{numOfFields: -1}
+	return &Parser{numOfFields: -1, endedOnCR: false}
 }
 
 func Join(s []string, sep string) string {
@@ -37,35 +38,102 @@ func Join(s []string, sep string) string {
 	return res
 }
 
-func (pr *Parser) ReadLine(r io.Reader) (*string, error) {
-	*pr.line = ""
-	*pr.fields = (*pr.fields)[:0]
-	curField := []string{""}
+func (pr *Parser) readQuote(r io.Reader) (*string, error) {
 	b := make([]byte, 1)
-	inQuo := false
-	quoField := false
-	started := false
-
+	line := ""
 	for {
 		_, err := r.Read(b)
 		if err == io.EOF {
-			if inQuo {
-				return nil, ErrQuote
-			}
-			// todo
+			return nil, ErrQuote
 		} else if err != nil {
 			return nil, err
 		}
-
 		if b[0] == '"' {
-			if !started {
-				quoField = true
-				started = true
-			} else if !quoField {
+			return &line, nil
+		}
+		line += string(b)
+	}
+}
+
+func last(i any) any {
+	switch v := i.(type) {
+	case string:
+		return v[len(v)-1]
+	case []int:
+		return v[len(v)-1]
+	case []string:
+		return v[len(v)-1]
+	case []byte:
+		return v[len(v)-1]
+	case []rune:
+		return v[len(v)-1]
+	case []bool:
+		return v[len(v)-1]
+	case *string:
+		return (*v)[len(*v)-1]
+	case *[]int:
+		return (*v)[len(*v)-1]
+	case *[]string:
+		return (*v)[len(*v)-1]
+	case *[]byte:
+		return (*v)[len(*v)-1]
+	case *[]rune:
+		return (*v)[len(*v)-1]
+	case *[]bool:
+		return (*v)[len(*v)-1]
+	default:
+		return nil
+	}
+}
+
+func (pr *Parser) ReadLine(r io.Reader) (*string, error) {
+	b := make([]byte, 1)
+	_, err := r.Read(b)
+	if err != nil {
+		return nil, err
+	}
+
+	if b[0] == '\n' && pr.endedOnCR {
+		pr.endedOnCR = false
+		return pr.ReadLine(r)
+	}
+	if b[0] == '\n' || b[0] == '\r' {
+		*pr.line = ""
+		*pr.fields = []string{}
+		pr.endedOnCR = (b[0] == '\r')
+
+		if pr.numOfFields == -1 {
+			pr.numOfFields = 0
+			return pr.line, nil
+		}
+		if pr.numOfFields != 0 {
+			return nil, ErrFieldCount
+		}
+		return pr.line, nil
+	}
+
+	*pr.line = ""
+	*pr.fields = []string{""}
+	for {
+		if b[0] == '"' {
+			if len(*pr.line) == 0 || last(pr.line) == "" {
+				line, err := pr.readQuote(r)
+				if err != nil {
+					return nil, err
+				}
+				*pr.fields = append(*pr.fields, *line)
+				*pr.line += *line
+			} else if last(pr.line) != '"' {
 				return nil, ErrQuote
+			} else {
+				line, err := pr.readQuote(r)
+				if err != nil {
+					return nil, err
+				}
+				(*pr.fields)[len(*pr.fields)-1] += "\"" + *line
+				*pr.line += *line
 			}
-			inQuo = !inQuo
-			curField[len(curField)-1] += string(b)
+		} else if b[0] == ',' {
 		}
 	}
 }
