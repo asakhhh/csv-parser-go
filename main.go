@@ -12,9 +12,9 @@ func main() {
 	var s string
 	fmt.Scanf("%s", &s)
 
-	file, err := os.Open(s + ".csv")
+	file, err := os.Open("testfiles/" + s + ".csv")
 	if err != nil {
-		fmt.Println("Error opening file: ", err)
+		fmt.Println("Error opening file:", err)
 		os.Exit(1)
 	}
 	defer file.Close()
