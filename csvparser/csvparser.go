@@ -90,9 +90,7 @@ func (pr *Parser) scanLine() error {
 			isQ = append(isQ, false)
 			continue
 		}
-		startQuote := ((*pr.fields)[i][0] == '"')
-		endQuote := ((*pr.fields)[i][len((*pr.fields)[i])-1] == '"')
-		if startQuote != endQuote {
+		if ((*pr.fields)[i][0] == '"') != ((*pr.fields)[i][len((*pr.fields)[i])-1] == '"') {
 			return ErrQuote
 		}
 		isQ = append(isQ, (*pr.fields)[i][0] == '"')
