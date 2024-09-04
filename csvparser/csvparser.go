@@ -38,37 +38,6 @@ func join(s []string, sep string) string {
 	return res
 }
 
-func last(i interface{}) interface{} {
-	switch v := i.(type) {
-	case string:
-		return v[len(v)-1]
-	case []int:
-		return v[len(v)-1]
-	case []string:
-		return v[len(v)-1]
-	case []byte:
-		return v[len(v)-1]
-	case []rune:
-		return v[len(v)-1]
-	case []bool:
-		return v[len(v)-1]
-	case *string:
-		return (*v)[len(*v)-1]
-	case *[]int:
-		return (*v)[len(*v)-1]
-	case *[]string:
-		return (*v)[len(*v)-1]
-	case *[]byte:
-		return (*v)[len(*v)-1]
-	case *[]rune:
-		return (*v)[len(*v)-1]
-	case *[]bool:
-		return (*v)[len(*v)-1]
-	default:
-		return nil
-	}
-}
-
 func contains(text, key string) bool {
 	if len(key) == 0 {
 		return true
@@ -121,9 +90,9 @@ func (pr *Parser) scanLine() error {
 			isQ = append(isQ, false)
 			continue
 		}
-		startQuote := ((*pr.fields)[i][0] == byte('"'))
-		endQuote := (last((*pr.fields)[i]) == byte('"'))
-		if (startQuote && !endQuote) || (!startQuote && endQuote) {
+		startQuote := ((*pr.fields)[i][0] == '"')
+		endQuote := ((*pr.fields)[i][len((*pr.fields)[i])-1] == '"')
+		if startQuote != endQuote {
 			return ErrQuote
 		}
 		isQ = append(isQ, (*pr.fields)[i][0] == '"')
