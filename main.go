@@ -9,16 +9,19 @@ import (
 )
 
 func main() {
-	file, err := os.Open("file.csv")
+	var s string
+	fmt.Scanf("%s", &s)
+
+	file, err := os.Open(s + ".csv")
 	if err != nil {
 		fmt.Println("Error opening file: ", err)
 		os.Exit(1)
 	}
 	defer file.Close()
 
-	var newParser csvparser.CSVParser = csvparser.NewParser()
+	var parser csvparser.CSVParser = csvparser.NewParser()
 	for {
-		_, err := newParser.ReadLine(file)
+		_, err := parser.ReadLine(file)
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -27,13 +30,15 @@ func main() {
 			os.Exit(1)
 		}
 		var fields []string
-		for i := 0; i < newParser.GetNumberOfFields(); i++ {
-			field, err := newParser.GetField(i)
+		for i := 0; i < parser.GetNumberOfFields(); i++ {
+			field, err := parser.GetField(i)
 			if err != nil {
 				fmt.Println("Error: ", err)
+				os.Exit(1)
 			}
-			fields = append(fields, fmt.Sprintf("\"%s\"", field))
+			// fields = append(fields, fmt.Sprintf("\"%s\"", field))
+			fields = append(fields, field)
 		}
-		fmt.Println(strings.Join(fields, "|"))
+		fmt.Println("|" + strings.Join(fields, "|") + "|")
 	}
 }
